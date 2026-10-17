@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CGPA Calculator</title>
+</head>
+<body>
+
+    <h1>CGPA Calculator</h1>
+
+    <label>Number of Courses:</label>
+    <input type="number" id="n">
+    <button onclick="createInputs()">Submit</button>
+
+    <div id="courses"></div>
+    <button onclick="calculate()">Calculate CGPA</button>
+
+    <h3 id="result"></h3>
+
+    <script>
+        function createInputs() {
+            let n = Number(document.getElementById("n").value);
+            let text = "";
+
+            if (n < 1 || !Number.isInteger(n)) {
+                alert("Enter a valid number of courses");
+                return;
+            }
+
+            for (let i = 1; i <= n; i++) {
+                text += "Course " + i + " Grade: ";
+                text += '<input type="number" class="grade"><br><br>';
+
+                text += "Credit Hours: ";
+                text += '<input type="number" class="credit"><br><br>';
+            }
+
+            document.getElementById("courses").innerHTML = text;
+        }
+
+        function calculate() {
+            let grades = document.getElementsByClassName("grade");
+            let credits = document.getElementsByClassName("credit");
+
+            let totalCredits = 0;
+            let totalPoints = 0;
+
+            for (let i = 0; i < grades.length; i++) {
+                let g = Number(grades[i].value);
+                let c = Number(credits[i].value);
+
+                if (grades[i].value === "" ||
+                    credits[i].value === "" ||
+                    g < 0 || g > 10 || c <= 0) {
+                    alert("Enter valid grades (0-10) and credits");
+                    return;
+                }
+
+                totalPoints += g * c;
+                totalCredits += c;
+            }
+
+            if (totalCredits === 0) {
+                alert("Please enter the course details first");
+                return;
+            }
+
+            let cgpa = totalPoints / totalCredits;
+
+            document.getElementById("result").innerHTML =
+                "Total Credits: " + totalCredits +
+                "<br>Total Grade Points: " + totalPoints +
+                "<br>Final CGPA: " + cgpa.toFixed(2);
+        }
+    </script>
+
+</body>
+</html>

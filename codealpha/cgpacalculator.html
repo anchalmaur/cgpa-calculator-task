@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2ff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #c5c5c5;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #4338ca;
+        }
+        input {
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .course {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .course input {
+            width: 100%;
+        }
+        button {
+            background: #4338ca;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px 4px;
+        }
+        button:hover {
+            background: #312e81;
+        }
+        #result {
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background: #4338ca;
+            color: white;
+        }
+        .final {
+            background: #eef2ff;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        @media (max-width: 500px) {
+            .course {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>CGPA Calculator</h1>
+    <p>Calculate your semester GPA and overall CGPA.</p>
+    <label for="count">Number of courses:</label>
+    <input type="number" id="count" min="1" max="30"
+           placeholder="Enter number of courses">
+    <button onclick="generateCourses()">Add Courses</button>
+    <form id="courseForm">
+        <div id="courses"></div>
+        <div id="previousSection">
+            <h3>Previous Semester Details (Optional)</h3>
+            <label for="previousCGPA">Previous CGPA:</label>
+            <input type="number" id="previousCGPA"
+                   min="0" max="10" step="0.01"
+                   placeholder="e.g. 8.2">
+            <label for="previousCredits">Previous total credits:</label>
+            <input type="number" id="previousCredits"
+                   min="0" step="0.01"
+                   placeholder="e.g. 20">
+        </div>
+        <button type="submit">Calculate GPA & CGPA</button>
+        <button type="button" onclick="resetCalculator()">
+            Reset
+        </button>
+    </form>
+    <div id="result"></div>
+</div>
+<script>
+    function generateCourses() {
+        const count = Number(document.getElementById("count").value);
+        const courses = document.getElementById("courses");
+        if (!Number.isInteger(count) || count < 1 || count > 30) {
+            alert("Please enter a number of courses between 1 and 30.");
+            return;
+        }
+        courses.innerHTML = "<h2>Enter Course Details</h2>";
+        for (let i = 1; i <= count; i++) {
+            courses.innerHTML += `
+                <div class="course">
+                    <input type="text"
+                           name="courseName"
+                           placeholder="Course ${i} name"
+                           value="Course ${i}" required>
+                    <input type="number"
+                           name="grade"
+                           placeholder="Grade (0-10)"
+                           min="0" max="10" step="0.01"
+                           required>
+                    <input type="number"
+                           name="credit"
+                           placeholder="Credits"
+                           min="0.01" step="0.01"
+                           required>
+                </div>`;
+        }
+        document.getElementById("result").innerHTML = "";
+    }
+    document.getElementById("courseForm").addEventListener(
+        "submit", function(event) {
+            event.preventDefault();
+            const names = document.getElementsByName("courseName");
+            const grades = document.getElementsByName("grade");
+            const credits = document.getElementsByName("credit");
+            if (grades.length === 0) {
+                alert("Please add courses first.");
+                return;
+            }
+            let totalCredits = 0;
+            let totalGradePoints = 0;
+            let rows = "";
+            for (let i = 0; i < grades.length; i++) {
+                const name = names[i].value.trim();
+                const grade = Number(grades[i].value);
+                const credit = Number(credits[i].value);
+                if (!name || grades[i].value === "" ||
+                    credits[i].value === "" ||
+                    !Number.isFinite(grade) ||
+                    grade < 0 || grade > 10 ||
+                    !Number.isFinite(credit) || credit <= 0) {
+                    alert("Enter a course name, a grade from 0 to 10, and positive credits.");
+                    return;
+                }
+                const points = grade * credit;
+                totalCredits += credit;
+                totalGradePoints += points;
+                rows += `
+                    <tr>
+                        <td>${escapeHTML(name)}</td>
+                        <td>${grade.toFixed(2)}</td>
+                        <td>${credit.toFixed(2)}</td>
+                        <td>${points.toFixed(2)}</td>
+                    </tr>`;
+            }
+            const semesterGPA = totalGradePoints / totalCredits;
+            const previousCGPAInput =
+                document.getElementById("previousCGPA").value;
+            const previousCreditsInput =
+                document.getElementById("previousCredits").value;
+            let overallCGPA = semesterGPA;
+            let cgpaText = "Overall CGPA: " + overallCGPA.toFixed(2);
+            if (previousCGPAInput !== "" ||
+                previousCreditsInput !== "") {
+                const previousCGPA = Number(previousCGPAInput);
+                const previousCredits = Number(previousCreditsInput);
+                if (previousCGPAInput === "" ||
+                    previousCreditsInput === "" ||
+                    !Number.isFinite(previousCGPA) ||
+                    previousCGPA < 0 || previousCGPA > 10 ||
+                    !Number.isFinite(previousCredits) ||
+                    previousCredits <= 0) {
+                    alert("Enter both a valid previous CGPA (0-10) and positive previous credits, or leave both blank.");
+                    return;
+                }
+                overallCGPA =
+                    (previousCGPA * previousCredits +
+                     totalGradePoints) /
+                    (previousCredits + totalCredits);
+                cgpaText =
+                    "Overall CGPA: " + overallCGPA.toFixed(2);
+            }
+            document.getElementById("result").innerHTML = `
+                <h2>Calculation Results</h2>
+                <table>
+                    <tr>
+                        <th>Course</th>
+                        <th>Grade</th>
+                        <th>Credits</th>
+                        <th>Grade Points</th>
+                    </tr>
+                    ${rows}
+                </table>
+                <div class="final">
+                    <p>Total Credits: ${totalCredits.toFixed(2)}</p>
+                    <p>Total Grade Points: ${totalGradePoints.toFixed(2)}</p>
+                    <p>Semester GPA: ${semesterGPA.toFixed(2)}</p>
+                    <p>${cgpaText}</p>
+                </div>`;
+        }
+    );
+    function escapeHTML(value) {
+        return value.replace(/[&<>"']/g, function(character) {
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[character];
+        });
+    }
+    function resetCalculator() {
+        document.getElementById("courseForm").reset();
+        document.getElementById("count").value = "";
+        document.getElementById("courses").innerHTML = "";
+        document.getElementById("result").innerHTML = "";
+    }
+</script>
+</body>
+</html>
